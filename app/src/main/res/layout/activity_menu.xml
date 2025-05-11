@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/btnEnterRoom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="방 입장하기" />
+
+    <Button
+        android:id="@+id/btnMakeRoom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="방 만들기"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/btnRoomList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="채팅방 목록 보기"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/btnSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="설정"
+        android:layout_marginTop="16dp" />
+
+
+</LinearLayout>
