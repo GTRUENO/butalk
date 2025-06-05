@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">BuTalk</string>
+
+    <string-array name="user_types">
+        <item>학부생</item>
+        <item>대학원생</item>
+        <item>교직원</item>
+    </string-array>
+
+
 </resources>
+
