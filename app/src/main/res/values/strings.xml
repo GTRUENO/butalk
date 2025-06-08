@@ -6,6 +6,8 @@
         <item>대학원생</item>
         <item>교직원</item>
     </string-array>
+    <string name="profile_picture">프로필 사진</string>
+
 
 
 </resources>

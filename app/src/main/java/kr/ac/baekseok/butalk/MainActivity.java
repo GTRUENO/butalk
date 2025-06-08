@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // 🔸 방장 여부 판단
+        // 방장 여부 판단
         FirebaseDatabase.getInstance().getReference("rooms")
                 .child(roomId)
                 .child("owner")
@@ -105,17 +105,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 입장 메시지 출력
-//        FirebaseDatabase.getInstance().getReference("users")
-//                .child(uid)
-//                .child("nickname")
-//                .get()
-//                .addOnSuccessListener(snapshot -> {
-//                    String nickname = snapshot.getValue(String.class);
-//                    if (nickname != null) {
-//                        postSystemMessage(nickname + "님이 입장했습니다");
-//                    }
-//                });
 
         btnSend.setOnClickListener(v -> sendMessage());
 
@@ -137,7 +126,9 @@ public class MainActivity extends AppCompatActivity {
                     if (nickname == null) nickname = "알 수 없음";
 
                     long timestamp = System.currentTimeMillis();
-                    Message message = new Message(nickname, msg, timestamp);
+
+                    // 수정된 생성자 사용
+                    Message message = new Message(uid, msg, timestamp);
 
                     String messageId = chatRef.push().getKey();
                     chatRef.child(messageId).setValue(message);
@@ -145,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                     editMessage.setText("");
                 });
     }
+
 
     private void postSystemMessage(String text) {
         long timestamp = System.currentTimeMillis();

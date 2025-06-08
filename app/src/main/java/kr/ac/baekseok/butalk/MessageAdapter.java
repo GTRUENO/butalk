@@ -10,7 +10,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +41,9 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messageList.get(position);
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = (currentUser != null) ? currentUser.getUid() : "";
 
         if ("[시스템]".equals(message.getSender())) {
             holder.layoutLeft.setVisibility(View.GONE);
@@ -48,16 +56,81 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             holder.layoutRight.setVisibility(View.VISIBLE);
             holder.txtMessageRight.setText(message.getMessage());
             holder.txtTimeRight.setText(formatTime(message.getTimestamp()));
+
+            // ➕ 내 닉네임 설정 추가
+            FirebaseDatabase.getInstance().getReference("users").child(uid)
+                    .child("nickname")
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String nickname = snapshot.getValue(String.class);
+                            holder.txtSenderRight.setText(nickname != null ? nickname : "나");
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            holder.txtSenderRight.setText("나");
+                        }
+                    });
         } else {
             holder.layoutRight.setVisibility(View.GONE);
             holder.layoutSystem.setVisibility(View.GONE);
             holder.layoutLeft.setVisibility(View.VISIBLE);
-            holder.txtNameLeft.setText(message.getSender());
+
+            String senderUid = message.getSender();
+
+            // UID인지 확인
+            boolean looksLikeUid = senderUid != null && senderUid.length() >= 28 && senderUid.matches("[a-zA-Z0-9]+");
+
+            if (looksLikeUid) {
+                // UID일 경우: 닉네임 가져오기
+                FirebaseDatabase.getInstance().getReference("users").child(senderUid)
+                        .child("nickname")
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                String nickname = snapshot.getValue(String.class);
+                                holder.txtNameLeft.setText(nickname != null ? nickname : "알 수 없음");
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                holder.txtNameLeft.setText("알 수 없음");
+                            }
+                        });
+            } else {
+                // 그냥 닉네임일 경우
+                holder.txtNameLeft.setText(senderUid);
+            }
+
             holder.txtMessageLeft.setText(message.getMessage());
             holder.txtTimeLeft.setText(formatTime(message.getTimestamp()));
-            // TODO: 프로필 이미지 로딩 (예: Glide.with(...))
+
+            // 프로필 이미지 설정
+            FirebaseDatabase.getInstance().getReference("users").child(senderUid)
+                    .child("profileImageUrl")
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String url = snapshot.getValue(String.class);
+                            if (url != null && !url.isEmpty()) {
+                                Glide.with(holder.imgProfile.getContext())
+                                        .load(url)
+                                        .placeholder(R.drawable.ic_profile_placeholder)
+                                        .into(holder.imgProfile);
+                            } else {
+                                holder.imgProfile.setImageResource(R.drawable.ic_profile_placeholder);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            holder.imgProfile.setImageResource(R.drawable.ic_profile_placeholder);
+                        }
+                    });
         }
     }
+
 
     private String formatTime(long timestamp) {
         Date date = new Date(timestamp);
@@ -86,7 +159,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         LinearLayout layoutLeft, layoutRight, layoutSystem;
         ImageView imgProfile;
         TextView txtNameLeft, txtMessageLeft, txtTimeLeft;
-        TextView txtMessageRight, txtTimeRight;
+        TextView txtSenderRight, txtMessageRight, txtTimeRight;
         TextView txtSystem;
 
         public MessageViewHolder(@NonNull View itemView) {
@@ -94,13 +167,19 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             layoutLeft = itemView.findViewById(R.id.layoutLeft);
             layoutRight = itemView.findViewById(R.id.layoutRight);
             layoutSystem = itemView.findViewById(R.id.layoutSystem);
+
             txtNameLeft = itemView.findViewById(R.id.txtSenderLeft);
+            txtSenderRight = itemView.findViewById(R.id.txtSenderRight); // ⬅️ 이 부분 추가
             imgProfile = itemView.findViewById(R.id.imgProfileLeft);
+
             txtMessageLeft = itemView.findViewById(R.id.txtMessageLeft);
             txtTimeLeft = itemView.findViewById(R.id.txtTimeLeft);
+
             txtMessageRight = itemView.findViewById(R.id.txtMessageRight);
             txtTimeRight = itemView.findViewById(R.id.txtTimeRight);
+
             txtSystem = itemView.findViewById(R.id.txtSystem);
         }
     }
+
 }

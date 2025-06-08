@@ -42,6 +42,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         // 닉네임 변경
+// 닉네임 변경
         btnUpdateNickname.setOnClickListener(v -> {
             String newNickname = edtNickname.getText().toString().trim();
             if (newNickname.isEmpty()) {
@@ -50,11 +51,19 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             String uid = mAuth.getCurrentUser().getUid();
+
+            // [1] 닉네임 저장
             db.getReference("users").child(uid).child("nickname").setValue(newNickname)
-                    .addOnSuccessListener(aVoid ->
-                            Toast.makeText(this, "닉네임이 변경되었습니다", Toast.LENGTH_SHORT).show()
-                    );
+                    .addOnSuccessListener(aVoid -> {
+                        // [2] 프로필 이미지 URL도 함께 저장 (현재는 테스트용 URL)
+                        String testProfileImageUrl = "https://example.com/your_image.jpg";
+                        db.getReference("users").child(uid).child("profileImageUrl").setValue(testProfileImageUrl)
+                                .addOnSuccessListener(unused ->
+                                        Toast.makeText(this, "닉네임과 프로필 이미지가 저장되었습니다", Toast.LENGTH_SHORT).show()
+                                );
+                    });
         });
+
 
         // 비밀번호 변경
         btnUpdatePassword.setOnClickListener(v -> {

@@ -11,6 +11,8 @@ import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -95,6 +97,17 @@ public class LoginActivity extends AppCompatActivity {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)
                 .addOnSuccessListener(authResult -> {
+                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                    // 사용자 닉네임이 없으면 이메일의 앞부분으로 설정
+                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(uid);
+                    userRef.child("nickname").get().addOnSuccessListener(snapshot -> {
+                        if (!snapshot.exists()) {
+                            String defaultNick = authResult.getUser().getEmail().split("@")[0];
+                            userRef.child("nickname").setValue(defaultNick);
+                        }
+                    });
+
                     Toast.makeText(this, "Google 로그인 성공", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(this, MenuActivity.class));
                     finish();
