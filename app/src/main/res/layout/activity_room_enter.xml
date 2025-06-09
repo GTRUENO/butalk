@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:background="#F0F8FF">
 
+    <!-- 방 ID 입력 -->
     <EditText
-        android:id="@+id/edtRoomId"
+        android:id="@+id/editRoomId"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="채팅방 ID" />
+        android:hint="채팅방 이름"
+        android:inputType="text"
+        android:backgroundTint="#005BAC"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
 
+    <!-- 비밀번호 입력 -->
     <EditText
-        android:id="@+id/edtPassword"
+        android:id="@+id/editRoomPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="비밀번호"
         android:inputType="textPassword"
-        android:layout_marginTop="16dp"/>
+        android:backgroundTint="#005BAC"
+        android:padding="12dp"
+        android:layout_marginBottom="24dp" />
 
+    <!-- 입장 버튼 -->
     <Button
-        android:id="@+id/btnEnter"
+        android:id="@+id/btnJoinRoomFinal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="입장"
-        android:layout_marginTop="24dp"/>
+        android:text="채팅방 입장"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#005BAC"
+        android:padding="12dp" />
 </LinearLayout>
+

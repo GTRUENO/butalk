@@ -2,27 +2,38 @@ package kr.ac.baekseok.butalk;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class RoomListActivity extends AppCompatActivity {
 
-    private ListView listView;
-    private ArrayList<String> roomIds = new ArrayList<>();
-    private ArrayAdapter<String> adapter;
+    private ImageView profileImage;
+    private TextView nicknameText;
+    private Button btnCreateRoom, btnJoinRoom;
+    private RecyclerView roomRecyclerView;
+    private BottomNavigationView bottomNavigation;
+
+    private RoomListAdapter adapter;
+    private ArrayList<RoomInfo> roomList = new ArrayList<>();
+    private HashMap<String, String> nicknameCache = new HashMap<>();
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -32,57 +43,124 @@ public class RoomListActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_room_list);
 
-        listView = findViewById(R.id.listViewRooms);
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, roomIds);
-        listView.setAdapter(adapter);
+        profileImage = findViewById(R.id.profileImage);
+        nicknameText = findViewById(R.id.nicknameText);
+        btnCreateRoom = findViewById(R.id.btnCreateRoom);
+        btnJoinRoom = findViewById(R.id.btnJoinRoom);
+        roomRecyclerView = findViewById(R.id.roomRecyclerView);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
 
-        // 현재 로그인된 사용자 UID
+        roomRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new RoomListAdapter(roomList, this);
+        roomRecyclerView.setAdapter(adapter);
+
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // 내가 속해 있는 방만 표시
-        FirebaseDatabase.getInstance().getReference("rooms")
+        // 사용자 정보 불러오기
+        FirebaseDatabase.getInstance().getReference("users").child(uid)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        roomIds.clear();
+                        String nickname = snapshot.child("nickname").getValue(String.class);
+                        String profileUrl = snapshot.child("profileUrl").getValue(String.class);
+                        nicknameText.setText(nickname);
+                        Glide.with(RoomListActivity.this).load(profileUrl)
+                                .placeholder(R.drawable.ic_profile_placeholder)
+                                .into(profileImage);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+        btnCreateRoom.setOnClickListener(v -> startActivity(new Intent(this, RoomCreateActivity.class)));
+        btnJoinRoom.setOnClickListener(v -> startActivity(new Intent(this, RoomEnterActivity.class)));
+
+        // 실시간 채팅방 목록 반영
+        FirebaseDatabase.getInstance().getReference("rooms")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        roomList.clear();
                         for (DataSnapshot room : snapshot.getChildren()) {
-                            // 🔽 members 안에 내 UID가 있으면 해당 방을 리스트에 추가
                             if (room.child("members").hasChild(uid)) {
-                                roomIds.add(room.getKey());
+                                String roomId = room.getKey();
+                                String lastMsg = "";
+                                String senderUid = "";
+                                long timestamp = 0;
+                                int memberCount = (int) room.child("members").getChildrenCount();
+
+                                for (DataSnapshot msgSnap : room.child("messages").getChildren()) {
+                                    Message m = msgSnap.getValue(Message.class);
+                                    if (m != null && m.getTimestamp() > timestamp) {
+                                        timestamp = m.getTimestamp();
+                                        lastMsg = m.getMessage();
+                                        senderUid = m.getSender();
+                                    }
+                                }
+
+                                long finalTimestamp = timestamp;
+                                String finalLastMsg = lastMsg;
+                                String finalSenderUid = senderUid;
+
+                                if (finalSenderUid.startsWith("[")) {
+                                    RoomInfo info = new RoomInfo(roomId, finalLastMsg, finalSenderUid, memberCount, finalTimestamp);
+                                    roomList.add(info);
+                                    sortAndRefresh();
+                                    continue;
+                                }
+
+                                if (nicknameCache.containsKey(finalSenderUid)) {
+                                    RoomInfo info = new RoomInfo(roomId, finalLastMsg, nicknameCache.get(finalSenderUid), memberCount, finalTimestamp);
+                                    roomList.add(info);
+                                    sortAndRefresh();
+                                } else {
+                                    FirebaseDatabase.getInstance().getReference("users")
+                                            .child(finalSenderUid)
+                                            .child("nickname")
+                                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                    String nickname = snapshot.getValue(String.class);
+                                                    if (nickname == null) nickname = "알 수 없음";
+                                                    nicknameCache.put(finalSenderUid, nickname);
+
+                                                    RoomInfo info = new RoomInfo(roomId, finalLastMsg, nickname, memberCount, finalTimestamp);
+                                                    roomList.add(info);
+                                                    sortAndRefresh();
+                                                }
+
+                                                @Override
+                                                public void onCancelled(@NonNull DatabaseError error) {}
+                                            });
+                                }
                             }
                         }
-                        adapter.notifyDataSetChanged();
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(RoomListActivity.this, "불러오기 실패", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RoomListActivity.this, "채팅방 목록 불러오기 실패", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-        // 클릭 시 RoomEnterActivity로 이동
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedRoom = roomIds.get(position);
-            DatabaseReference memberRef = FirebaseDatabase.getInstance()
-                    .getReference("rooms")
-                    .child(selectedRoom)
-                    .child("members")
-                    .child(uid)
-                    .child("joinAt");
-
-            memberRef.get().addOnSuccessListener(snapshot -> {
-                if (snapshot.exists()) {
-                    // 이미 참가한 방이므로 → 바로 입장
-                    Intent intent = new Intent(this, MainActivity.class);
-                    intent.putExtra("roomId", selectedRoom);
-                    startActivity(intent);
-                } else {
-                    // 처음 들어가는 방이므로 → 비밀번호 입력 화면으로 이동
-                    Intent intent = new Intent(this, RoomEnterActivity.class);
-                    intent.putExtra("roomId", selectedRoom);  // 미리 전달
-                    startActivity(intent);
-                }
-            });
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.menu_main:
+                    startActivity(new Intent(this, MenuActivity.class));
+                    return true;
+                case R.id.menu_chat:
+                    return true; // 현재 화면 유지
+                case R.id.menu_settings:
+                    startActivity(new Intent(this, SettingsActivity.class));
+                    return true;
+            }
+            return false;
         });
+    }
+
+    private void sortAndRefresh() {
+        Collections.sort(roomList, (a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        adapter.notifyDataSetChanged();
     }
 }

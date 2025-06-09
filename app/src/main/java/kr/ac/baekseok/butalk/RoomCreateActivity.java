@@ -1,7 +1,7 @@
 package kr.ac.baekseok.butalk;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -12,53 +12,58 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.HashMap;
+
 public class RoomCreateActivity extends AppCompatActivity {
 
-    private EditText edtRoomId, edtPassword;
+    private EditText editRoomId, editPassword;
     private Button btnCreate;
+
+    private FirebaseAuth auth;
+    private DatabaseReference dbRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_create);
 
-        edtRoomId = findViewById(R.id.edtRoomId);
-        edtPassword = findViewById(R.id.edtPassword);
-        btnCreate = findViewById(R.id.btnCreate);
+        editRoomId = findViewById(R.id.editRoomId);
+        editPassword = findViewById(R.id.editRoomPassword);
+        btnCreate = findViewById(R.id.btnCreateRoomFinal);
 
-        btnCreate.setOnClickListener(v -> {
-            String roomId = edtRoomId.getText().toString().trim();
-            String password = edtPassword.getText().toString().trim();
+        auth = FirebaseAuth.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference();
 
-            if (roomId.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "ID와 비밀번호를 입력하세요", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        btnCreate.setOnClickListener(v -> createRoom());
+    }
 
-            DatabaseReference roomRef = FirebaseDatabase.getInstance().getReference("rooms").child(roomId);
+    private void createRoom() {
+        String roomId = editRoomId.getText().toString().trim();
+        String password = editPassword.getText().toString().trim();
+        String uid = auth.getCurrentUser().getUid();
+        long joinAt = System.currentTimeMillis();
 
-            roomRef.child("password").get().addOnSuccessListener(snapshot -> {
-                if (snapshot.exists()) {
-                    Toast.makeText(this, "이미 존재하는 방입니다", Toast.LENGTH_SHORT).show();
-                } else {
-                    // 방 정보 저장
-                    roomRef.child("password").setValue(password);
-                    roomRef.child("createdAt").setValue(System.currentTimeMillis());
+        if (TextUtils.isEmpty(roomId) || TextUtils.isEmpty(password)) {
+            Toast.makeText(this, "모든 칸을 입력해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                    // 방장 등록 및 joinAt 기록
-                    String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    long now = System.currentTimeMillis();
+        HashMap<String, Object> roomData = new HashMap<>();
+        roomData.put("password", password);
+        roomData.put("owner", uid);
 
-                    roomRef.child("owner").setValue(uid); // 방장 지정
-                    roomRef.child("members").child(uid).child("joinAt").setValue(now);
+        HashMap<String, Object> memberData = new HashMap<>();
+        memberData.put("joinAt", joinAt);
 
-                    // MainActivity로 이동
-                    Intent intent = new Intent(this, MainActivity.class);
-                    intent.putExtra("roomId", roomId);
-                    startActivity(intent);
+        roomData.put("members", new HashMap<String, Object>() {{
+            put(uid, memberData);
+        }});
+
+        dbRef.child("rooms").child(roomId).setValue(roomData)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(this, "채팅방이 생성되었습니다!", Toast.LENGTH_SHORT).show();
                     finish();
-                }
-            });
-        });
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "실패: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 }
