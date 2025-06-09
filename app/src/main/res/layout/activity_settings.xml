@@ -1,51 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#F0F8FF">
 
-    <TextView
-        android:id="@+id/txtEmail"
+    <!-- 상단 프로필 영역 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="example@domain.com"
-        android:textSize="16sp"
-        android:padding="8dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:paddingBottom="24dp">
 
-    <EditText
-        android:id="@+id/edtNickname"
+        <ImageView
+            android:id="@+id/profileImage"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_profile_placeholder"
+            android:background="@drawable/circle_bg"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/nicknameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="닉네임"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginStart="16dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 설정 항목 버튼들 -->
+    <Button
+        android:id="@+id/btnChangeProfileImage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="새 닉네임"
-        android:padding="8dp" />
+        android:text="프로필 사진 변경"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
 
     <Button
-        android:id="@+id/btnUpdateNickname"
+        android:id="@+id/btnChangeNickname"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="닉네임 수정" />
-
-    <EditText
-        android:id="@+id/edtPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="새 비밀번호"
-        android:inputType="textPassword"
-        android:padding="8dp" />
+        android:text="닉네임 변경"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
 
     <Button
-        android:id="@+id/btnUpdatePassword"
+        android:id="@+id/btnChangePassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="비밀번호 수정" />
+        android:text="비밀번호 변경"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="12dp" />
 
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="로그아웃"
-        android:backgroundTint="#FF4444"
+        android:backgroundTint="#888888"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="16dp" />
+        android:layout_marginBottom="12dp" />
+
+    <!-- 이 View가 빈 공간을 차지해서 아래 BottomNavigationView를 하단으로 밀어냄 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- 하단 네비게이션 -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/bottom_nav_menu" />
 </LinearLayout>
+
