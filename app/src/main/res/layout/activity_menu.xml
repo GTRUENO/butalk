@@ -1,37 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F0F8FF">
+
+    <!-- 상단 사용자 정보 + 버튼 두 개 -->
+
+
+
+    <TextView
+        android:id="@+id/nicknameGreeting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="사용자님\n오늘도 화이팅 하세요 :)"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/timetableLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="에브리타임 연동이 필요합니다."
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:layout_marginBottom="24dp" />
+
 
     <Button
-        android:id="@+id/btnEnterRoom"
+        android:id="@+id/btnSmartAttendance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="방 입장하기" />
+        android:text="📅 스마트 출결 바로가기"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF" />
 
     <Button
-        android:id="@+id/btnMakeRoom"
+        android:id="@+id/btnHomepage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="방 만들기"
-        android:layout_marginTop="16dp" />
+        android:text="🌐 백석대학교 메인 웹사이트 바로가기"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF" />
 
     <Button
-        android:id="@+id/btnRoomList"
+        android:id="@+id/btnInfoSystem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="채팅방 목록 보기"
-        android:layout_marginTop="16dp" />
+        android:text="ℹ 백석대학교 종합 정보 시스템 바로가기"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF" />
 
     <Button
-        android:id="@+id/btnSettings"
+        android:id="@+id/btnCyberCampus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="설정"
-        android:layout_marginTop="16dp" />
+        android:text="📚 백석대학교 사이버 캠퍼스 바로가기"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="#005BAC"
+        android:textColor="#FFFFFF" />
 
+    <Button
+        android:id="@+id/btnEverytime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="👥 에브리타임 바로가기"
+        android:backgroundTint="#FF6B6B"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="24dp" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        app:menu="@menu/bottom_nav_menu" />
 </LinearLayout>

@@ -57,7 +57,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             holder.txtMessageRight.setText(message.getMessage());
             holder.txtTimeRight.setText(formatTime(message.getTimestamp()));
 
-            // ➕ 내 닉네임 설정 추가
+            // 내 닉네임 설정 추가
             FirebaseDatabase.getInstance().getReference("users").child(uid)
                     .child("nickname")
                     .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -169,7 +169,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             layoutSystem = itemView.findViewById(R.id.layoutSystem);
 
             txtNameLeft = itemView.findViewById(R.id.txtSenderLeft);
-            txtSenderRight = itemView.findViewById(R.id.txtSenderRight); // ⬅️ 이 부분 추가
+            txtSenderRight = itemView.findViewById(R.id.txtSenderRight);
             imgProfile = itemView.findViewById(R.id.imgProfileLeft);
 
             txtMessageLeft = itemView.findViewById(R.id.txtMessageLeft);
