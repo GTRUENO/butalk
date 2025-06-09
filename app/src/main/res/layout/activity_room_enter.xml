@@ -5,7 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="#F0F8FF">
+    android:background="#F0F8FF"
+    android:fitsSystemWindows="true"
+    >
 
     <!-- 방 ID 입력 -->
     <EditText

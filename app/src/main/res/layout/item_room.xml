@@ -5,7 +5,9 @@
     android:padding="12dp"
     android:orientation="vertical"
     android:background="@android:color/white"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="8dp"
+    android:fitsSystemWindows="true"
+    >
 
     <!-- 방 이름 -->
     <TextView

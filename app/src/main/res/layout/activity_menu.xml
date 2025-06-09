@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F0F8FF">
+    android:background="#F0F8FF"
+    android:fitsSystemWindows="true"
+    >
 
     <!-- 상단 사용자 정보 + 버튼 두 개 -->
 
