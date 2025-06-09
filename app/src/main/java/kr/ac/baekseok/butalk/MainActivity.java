@@ -8,8 +8,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.widget.Button;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,7 +22,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private EditText editMessage;
-    private Button btnSend, btnExitOrDelete;
+    private ImageButton btnSend, btnMore;
     private RecyclerView recyclerView;
     private MessageAdapter adapter;
     private ArrayList<Message> messageList = new ArrayList<>();
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         editMessage = findViewById(R.id.editMessage);
         btnSend = findViewById(R.id.btnSend);
-        btnExitOrDelete = findViewById(R.id.btnExitOrDelete);
+        btnMore = findViewById(R.id.btnMore);
         recyclerView = findViewById(R.id.recyclerView);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -65,50 +67,62 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(snapshot -> {
                     if (snapshot.exists() && uid.equals(snapshot.getValue(String.class))) {
                         isOwner = true;
-                        btnExitOrDelete.setText("방 삭제하기");
-                    } else {
-                        btnExitOrDelete.setText("방 나가기");
                     }
                 });
 
-        btnExitOrDelete.setOnClickListener(v -> {
-            if (isOwner) {
-                postSystemMessage("방장이 방을 삭제했습니다");
-                FirebaseDatabase.getInstance().getReference("rooms")
-                        .child(roomId)
-                        .removeValue()
-                        .addOnSuccessListener(unused -> {
-                            Toast.makeText(this, "방을 삭제했습니다", Toast.LENGTH_SHORT).show();
-                            finish();
-                        });
-            } else {
-                FirebaseDatabase.getInstance().getReference("users")
-                        .child(uid)
-                        .child("nickname")
-                        .get()
-                        .addOnSuccessListener(snapshot -> {
-                            String nickname = snapshot.getValue(String.class);
-                            if (nickname != null) {
-                                postSystemMessage(nickname + "님이 나갔습니다");
-                            }
-                        });
-
-                FirebaseDatabase.getInstance().getReference("rooms")
-                        .child(roomId)
-                        .child("members")
-                        .child(uid)
-                        .removeValue()
-                        .addOnSuccessListener(unused -> {
-                            Toast.makeText(this, "방에서 나갔습니다", Toast.LENGTH_SHORT).show();
-                            finish();
-                        });
-            }
-        });
-
+        btnMore.setOnClickListener(v -> showMoreMenu());
 
         btnSend.setOnClickListener(v -> sendMessage());
 
         receiveMessages();
+    }
+
+    private void showMoreMenu() {
+        PopupMenu popup = new PopupMenu(this, btnMore);
+        popup.getMenuInflater().inflate(R.menu.menu_chat_options, popup.getMenu());
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_exit_or_delete) {
+                handleExitOrDelete();
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
+    private void handleExitOrDelete() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (isOwner) {
+            postSystemMessage("방장이 방을 삭제했습니다");
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .removeValue()
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(this, "방을 삭제했습니다", Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
+        } else {
+            FirebaseDatabase.getInstance().getReference("users")
+                    .child(uid)
+                    .child("nickname")
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        String nickname = snapshot.getValue(String.class);
+                        if (nickname != null) {
+                            postSystemMessage(nickname + "님이 나갔습니다");
+                        }
+                    });
+
+            FirebaseDatabase.getInstance().getReference("rooms")
+                    .child(roomId)
+                    .child("members")
+                    .child(uid)
+                    .removeValue()
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(this, "방에서 나갔습니다", Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
+        }
     }
 
     private void sendMessage() {
@@ -127,16 +141,13 @@ public class MainActivity extends AppCompatActivity {
 
                     long timestamp = System.currentTimeMillis();
 
-                    // 수정된 생성자 사용
                     Message message = new Message(uid, msg, timestamp);
-
                     String messageId = chatRef.push().getKey();
                     chatRef.child(messageId).setValue(message);
 
                     editMessage.setText("");
                 });
     }
-
 
     private void postSystemMessage(String text) {
         long timestamp = System.currentTimeMillis();
